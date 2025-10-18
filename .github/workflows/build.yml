@@ -43,17 +43,11 @@ jobs:
           version: latest
           driver-opts: image=moby/buildkit:master
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: roxedus
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: roxedus
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
@@ -78,31 +72,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: roxedus
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: roxedus
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create manifests for DockerHub
-        env:
-          DOCKER_CLI_EXPERIMENTAL: enabled
-        run: |
-          IMAGE=$(echo ${GITHUB_REPOSITORY//docker-/} | tr '[:upper:]' '[:lower:]')
-          TAG=${GITHUB_REF//refs\/heads\//}
-          SOURCE=${IMAGE}:${{ needs.build.outputs.time }}
-
-          docker buildx imagetools create -t ${IMAGE}:${{ needs.build.outputs.time }}    ${SOURCE}-linux-amd64 ${SOURCE}-linux-arm-v7 ${SOURCE}-linux-arm64
-          if [[ ${GITHUB_REF//refs\/heads\//} == master ]]; then
-          docker buildx imagetools create -t ${IMAGE}:latest                             ${SOURCE}-linux-amd64 ${SOURCE}-linux-arm-v7 ${SOURCE}-linux-arm64
-          fi
 
       - name: Create manifests for GitHub Container Registry
         env:
